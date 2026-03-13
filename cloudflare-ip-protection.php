@@ -48,7 +48,7 @@ class CloudflareIPProtection {
         // Check PHP version
         if (version_compare(PHP_VERSION, '7.4', '<')) {
             deactivate_plugins(plugin_basename(__FILE__));
-            wp_die('This plugin requires PHP 7.0 or higher. You are running PHP ' . PHP_VERSION);
+            wp_die('This plugin requires PHP 7.4 or higher. You are running PHP ' . PHP_VERSION);
         }
         
         // Check if .htaccess exists and is writable
