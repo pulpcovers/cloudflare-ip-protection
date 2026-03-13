@@ -48,7 +48,7 @@ class CloudflareIPProtection {
         // Check PHP version
         if (version_compare(PHP_VERSION, '7.4', '<')) {
             deactivate_plugins(plugin_basename(__FILE__));
-            wp_die('This plugin requires PHP 7.4 or higher. You are running PHP ' . PHP_VERSION);
+            wp_die('This plugin requires PHP 7.0 or higher. You are running PHP ' . PHP_VERSION);
         }
         
         // Check if .htaccess exists and is writable
@@ -111,7 +111,15 @@ class CloudflareIPProtection {
         $notice = get_transient('cloudflare_ip_admin_notice');
         if ($notice) {
             list($type, $message) = explode(':', $notice, 2);
-            $class = ($type === 'error') ? 'notice-error' : (($type === 'warning') ? 'notice-warning' : 'notice-success');
+            
+            if ($type === 'error') {
+                $class = 'notice-error';
+            } elseif ($type === 'warning') {
+                $class = 'notice-warning';
+            } else {
+                $class = 'notice-success';
+            }
+            
             echo '<div class="notice ' . esc_attr($class) . ' is-dismissible"><p>' . esc_html($message) . '</p></div>';
             delete_transient('cloudflare_ip_admin_notice');
         }
@@ -468,21 +476,22 @@ class CloudflareIPProtection {
     }
     
     private function count_whitelist_ips($whitelist) {
-        if (empty($whitelist)) {
-            return 0;
-        }
-        $lines = explode("\n", $whitelist);
-        $count = 0;
-        
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (!empty($line) && !$this->starts_with($line, '#')) {
-                $count++;
-            }
-        }
-        
-        return $count;
-    }
+		if (empty($whitelist)) {
+			return 0;
+		}
+		$lines = explode("\n", $whitelist);
+		$count = 0;
+		
+		foreach ($lines as $line) {
+			$line = trim($line);
+			// Only count valid IPs
+			if (!empty($line) && !$this->starts_with($line, '#') && preg_match('/^[0-9a-fA-F:.\\/]+$/', $line)) {
+				$count++;
+			}
+		}
+		
+		return $count;
+	}
     
     private function display_error_log() {
         $log = get_option('cloudflare_ip_error_log', array());
